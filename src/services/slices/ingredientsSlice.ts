@@ -36,7 +36,7 @@ export const ingredientsSlice = createSlice({
       // выполнился успешно
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload; // сохраняем 
+        state.items = action.payload; // сохраняем
       })
       // провалился
       .addCase(fetchIngredients.rejected, (state, action) => {

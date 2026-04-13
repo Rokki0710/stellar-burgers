@@ -1,14 +1,32 @@
-import { FC, ReactElement } from 'react';
-import { TLocationState } from '@utils-types';
-import { useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { FC } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from '../services/store';
+import { Preloader } from '@ui';
 
 type ProtectedRouteProps = {
-  isAuth?: boolean;
-  element: ReactElement;
+  onlyUnAuth?: boolean;
+  element: React.ReactElement;
 };
 
 export const ProtectedRoute: FC<ProtectedRouteProps> = ({
-  isAuth = true,
-  element
-}) => element;
+  element,
+  onlyUnAuth = false
+}) => {
+  const location = useLocation();
+  const isAuthChecked = useSelector((state) => state.user.isAuthChecked);
+  const user = useSelector((state) => state.user.data);
+
+  if (!isAuthChecked) {
+    return <Preloader />;
+  }
+  if (!onlyUnAuth && !user) {
+    return <Navigate to='/login' state={{ from: location }} replace />;
+  }
+
+  if (onlyUnAuth && user) {
+    const from = location.state?.from || '/';
+    return <Navigate to={from} replace />;
+  }
+
+  return element;
+};

@@ -1,67 +1,72 @@
-import { useState, useRef, useEffect, FC } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { FC, useMemo } from 'react';
+import { TConstructorIngredient } from '@utils-types';
+import { BurgerConstructorUI } from '@ui';
+import { useDispatch, useSelector } from '../../services/store';
+import { createOrder } from '../../services/slices/constructorSlice';
+import { fetchFeed } from '../../services/slices/feedSlice';
+import { useNavigate } from 'react-router-dom';
 
-import { TIngredient, TTabMode } from '@utils-types';
-import { BurgerIngredientsUI } from '../ui/burger-ingredients';
-import { useSelector } from '../../services/store';
+export const BurgerConstructor: FC = () => {
+  const dispatch = useDispatch();
 
-export const BurgerIngredients: FC = () => {
-  /** TODO: взять переменные из стора */
-  const items = useSelector((state) => state.ingredients.items);
-  const buns: TIngredient[] = items.filter((item) => item.type === 'bun');
-  const mains: TIngredient[] = items.filter((item) => item.type === 'main');
-  const sauces: TIngredient[] = items.filter((item) => item.type === 'sauce');
+  const constructorItems = useSelector(
+    (store) => store.burgerConstructor.constructorItems
+  );
 
-  const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
-  const titleBunRef = useRef<HTMLHeadingElement>(null);
-  const titleMainRef = useRef<HTMLHeadingElement>(null);
-  const titleSaucesRef = useRef<HTMLHeadingElement>(null);
+  const orderRequest = useSelector(
+    (store) => store.burgerConstructor.orderRequest
+  );
 
-  const [bunsRef, inViewBuns] = useInView({
-    threshold: 0
-  });
+  const orderModalData = useSelector(
+    (store) => store.burgerConstructor.orderModalData
+  );
 
-  const [mainsRef, inViewFilling] = useInView({
-    threshold: 0
-  });
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.user?.data);
 
-  const [saucesRef, inViewSauces] = useInView({
-    threshold: 0
-  });
-
-  useEffect(() => {
-    if (inViewBuns) {
-      setCurrentTab('bun');
-    } else if (inViewSauces) {
-      setCurrentTab('sauce');
-    } else if (inViewFilling) {
-      setCurrentTab('main');
+  const onOrderClick = () => {
+    if (!constructorItems.bun || orderRequest) return;
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, [inViewBuns, inViewFilling, inViewSauces]);
-
-  const onTabClick = (tab: string) => {
-    setCurrentTab(tab as TTabMode);
-    if (tab === 'bun')
-      titleBunRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'main')
-      titleMainRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'sauce')
-      titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const ingredientsIDs = [
+      constructorItems.bun._id,
+      ...constructorItems.ingredients.map((item) => item._id),
+      constructorItems.bun._id
+    ];
+    console.log('Отправляем заказ:', ingredientsIDs);
+    dispatch(createOrder(ingredientsIDs))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchFeed());
+      })
+      .catch((error) => {
+        console.error('Ошибка создания заказа:', error);
+      });
+  };
+  const closeOrderModal = () => {
+    dispatch({ type: 'constructorSlice/closeOrderModal' });
   };
 
+  const price = useMemo(
+    () =>
+      (constructorItems.bun ? constructorItems.bun.price * 2 : 0) +
+      constructorItems.ingredients.reduce(
+        (s: number, v: TConstructorIngredient) => s + v.price,
+        0
+      ),
+    [constructorItems]
+  );
+
   return (
-    <BurgerIngredientsUI
-      currentTab={currentTab}
-      buns={buns}
-      mains={mains}
-      sauces={sauces}
-      titleBunRef={titleBunRef}
-      titleMainRef={titleMainRef}
-      titleSaucesRef={titleSaucesRef}
-      bunsRef={bunsRef}
-      mainsRef={mainsRef}
-      saucesRef={saucesRef}
-      onTabClick={onTabClick}
+    <BurgerConstructorUI
+      price={price}
+      orderRequest={orderRequest}
+      constructorItems={constructorItems}
+      orderModalData={orderModalData}
+      onOrderClick={onOrderClick}
+      closeOrderModal={closeOrderModal}
     />
   );
 };
