@@ -17,13 +17,12 @@ import { AppHeader, IngredientDetails, Modal, OrderInfo } from '@components';
 import {
   Routes,
   Route,
-  Location,
   useLocation,
   useNavigate,
   useMatch
 } from 'react-router-dom';
 import { ProtectedRoute } from '../ProtectedRoute';
-import { useDispatch, useSelector } from '../../services/store';
+import { useDispatch } from '../../services/store';
 import { useEffect } from 'react';
 import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 import { checkUserAuth } from '../../services/slices/userSlice';
@@ -40,12 +39,18 @@ const App = () => {
     dispatch(checkUserAuth());
   }, [dispatch]);
 
-  const feedMatch = useMatch('/feed/:number');
-  const profileOrderMatch = useMatch('/profile/orders/:number');
+  const feedMatch = useMatch({ path: '/feed/:number', end: true });
+  const profileOrderMatch = useMatch({
+    path: '/profile/orders/:number',
+    end: true
+  });
 
   const orderNumber =
     feedMatch?.params.number || profileOrderMatch?.params.number;
   const modalTitle = orderNumber ? `#${orderNumber}` : '';
+
+  const isModalOpen = !!background && !!orderNumber;
+  const shouldShowPage = !background && !!orderNumber;
 
   return (
     <div className={styles.app}>
@@ -73,7 +78,10 @@ const App = () => {
           path='/profile'
           element={<ProtectedRoute element={<Profile />} />}
         />
-        <Route path='profile/orders' element={<ProfileOrders />} />
+        <Route
+          path='/profile/orders'
+          element={<ProtectedRoute element={<ProfileOrders />} />}
+        />
         <Route path='/feed/:number' element={<OrderInfo />} />
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
         <Route
@@ -82,7 +90,8 @@ const App = () => {
         />
         <Route path='*' element={<NotFound404 />} />
       </Routes>
-      {background && (
+
+      {isModalOpen && (
         <Routes>
           <Route
             path='/feed/:number'
@@ -103,14 +112,28 @@ const App = () => {
           <Route
             path='/profile/orders/:number'
             element={
-              <Modal title={modalTitle} onClose={() => navigate(-1)}>
-                <OrderInfo />
-              </Modal>
+              <ProtectedRoute
+                element={
+                  <Modal title={modalTitle} onClose={() => navigate(-1)}>
+                    <OrderInfo />
+                  </Modal>
+                }
+              />
             }
+          />
+        </Routes>
+      )}
+
+      {shouldShowPage && (
+        <Routes>
+          <Route
+            path='/profile/orders/:number'
+            element={<ProtectedRoute element={<OrderInfo />} />}
           />
         </Routes>
       )}
     </div>
   );
 };
+
 export default App;
