@@ -25,14 +25,11 @@ const initialState: TOrderBurgerState = {
   orderModalData: null
 };
 
-export const createOrder = createAsyncThunk(
+export const createOrder = createAsyncThunk<TOrder, string[]>(
   'constructorSlice/createOrder',
-  async (ingredients: string[]) => {
+  async (ingredients) => {
     const data = await orderBurgerApi(ingredients);
-    return {
-      ...data.order,
-      ingredients: ingredients
-    } as TOrder;
+    return data.order;
   }
 );
 
@@ -101,7 +98,6 @@ export const constructorSlice = createSlice({
       .addCase(createOrder.fulfilled, (state, action) => {
         state.orderRequest = false;
         state.orderModalData = action.payload;
-        // Очищаем конструктор
         state.constructorItems = {
           bun: null,
           ingredients: []
