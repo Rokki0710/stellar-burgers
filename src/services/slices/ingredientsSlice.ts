@@ -28,17 +28,17 @@ export const ingredientsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // начался
+
       .addCase(fetchIngredients.pending, (state) => {
         state.isLoading = true;
-        state.error = null; // сбрасываем ошибку
+        state.error = null;
       })
-      // выполнился успешно
+
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload; // сохраняем
+        state.items = action.payload;
       })
-      // провалился
+
       .addCase(fetchIngredients.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Что-то пошло не так';
