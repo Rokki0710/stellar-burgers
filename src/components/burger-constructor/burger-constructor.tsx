@@ -1,24 +1,53 @@
 import { FC, useMemo } from 'react';
 import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
+import { useDispatch, useSelector } from '../../services/store';
+import { createOrder } from '../../services/slices/constructorSlice';
+import { fetchFeed } from '../../services/slices/feedSlice';
+import { useNavigate } from 'react-router-dom';
 
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
-  const constructorItems = {
-    bun: {
-      price: 0
-    },
-    ingredients: []
-  };
+  const dispatch = useDispatch();
 
-  const orderRequest = false;
+  const constructorItems = useSelector(
+    (store) => store.burgerConstructor.constructorItems
+  );
 
-  const orderModalData = null;
+  const orderRequest = useSelector(
+    (store) => store.burgerConstructor.orderRequest
+  );
+
+  const orderModalData = useSelector(
+    (store) => store.burgerConstructor.orderModalData
+  );
+
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.user?.data);
 
   const onOrderClick = () => {
     if (!constructorItems.bun || orderRequest) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const ingredientsIDs = [
+      constructorItems.bun._id,
+      ...constructorItems.ingredients.map((item) => item._id),
+      constructorItems.bun._id
+    ];
+    console.log('Отправляем заказ:', ingredientsIDs);
+    dispatch(createOrder(ingredientsIDs))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchFeed());
+      })
+      .catch((error) => {
+        console.error('Ошибка создания заказа:', error);
+      });
   };
-  const closeOrderModal = () => {};
+  const closeOrderModal = () => {
+    dispatch({ type: 'constructorSlice/closeOrderModal' });
+  };
 
   const price = useMemo(
     () =>
@@ -29,8 +58,6 @@ export const BurgerConstructor: FC = () => {
       ),
     [constructorItems]
   );
-
-  return null;
 
   return (
     <BurgerConstructorUI
