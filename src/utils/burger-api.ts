@@ -99,15 +99,6 @@ export const getOrdersApi = () =>
     return Promise.reject(data);
   });
 
-type TOwner = {
-  name: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type TNewOrder = TOrder;
-
 type TNewOrderResponse = TServerResponse<{
   order: TOrder;
   name: string;

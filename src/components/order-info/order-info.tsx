@@ -7,9 +7,6 @@ import { useParams } from 'react-router-dom';
 import { fetchOrderByNumber } from '../../services/slices/orderSlice';
 
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-
-  /* Готовим данные для отображения */
   const dispatch = useDispatch();
   const { number } = useParams();
 

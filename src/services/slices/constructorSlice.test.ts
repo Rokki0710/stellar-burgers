@@ -111,6 +111,7 @@ describe('constructor slice', () => {
 
   test('Проверяем сохранение заказа и очистку полей ингредиентов', () => {
     const mockOrder = {
+      _id: '1.1',
       ingredients: ['2.1'],
       status: 'done',
       name: 'бургер',
@@ -118,18 +119,10 @@ describe('constructor slice', () => {
       updatedAt: '2026-02-25T13:30:15.632Z',
       number: 101792
     };
-
-    const fulfilledAction = {
-      type: createOrder.fulfilled.type,
-      payload: mockOrder,
-      meta: { requestId: '123' }
-    };
-
     const state = constructorReducer(
       { ...initialState, orderRequest: true },
-      fulfilledAction
+      createOrder.fulfilled(mockOrder, '', [])
     );
-
     expect(state.orderRequest).toBe(false);
     expect(state.orderModalData).toEqual(mockOrder);
     expect(state.constructorItems.bun).toBeNull();
@@ -137,14 +130,9 @@ describe('constructor slice', () => {
   });
 
   test('Заказ переводится в false при rejected', () => {
-    const rejectedAction = {
-      type: createOrder.rejected.type,
-      error: { message: 'Error' }
-    };
-
     const state = constructorReducer(
       { ...initialState, orderRequest: true },
-      rejectedAction
+      createOrder.rejected(new Error('Error'), '', [])
     );
 
     expect(state.orderRequest).toBe(false);

@@ -2,7 +2,7 @@ const BUN = 'Краторная булка N-200i';
 const MAIN_NAME = 'Биокотлета из марсианской Магнолии';
 const ORDER_NUMBER = '12345';
 const ingredients = [BUN, MAIN_NAME];
-const ADDRESS = '/';
+const ADDRESS = "/";
 
 function addIngredientsToConstructor() {
   ingredients.forEach((name) => {
